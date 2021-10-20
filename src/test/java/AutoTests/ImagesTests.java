@@ -1,6 +1,9 @@
 package AutoTests;
-import io.restassured.path.json.JsonPath;
+import dto.GetImageByIdResponseDto;
+import dto.PostImageResponseDto;
 import org.junit.jupiter.api.*;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
@@ -19,7 +22,7 @@ public class ImagesTests extends BaseTests {
         URI uri = Objects.requireNonNull(ImagesTests.class.getResource("/01.jpg")).toURI();
         File image = new File(uri);
 
-        JsonPath response = given()
+        PostImageResponseDto response = given()
                 .spec(requestSpecificationWithAuth)
                 .multiPart("image", image)
                 .multiPart("name", "butterfly")
@@ -28,31 +31,36 @@ public class ImagesTests extends BaseTests {
                 .then()
                 .spec(positiveResponseSpecification)
                 .extract()
-                .jsonPath();
+                .as(PostImageResponseDto.class);
 
-        System.out.println(response.prettify());
+        assertNotNull(response.getData().getId());
+        assertNotNull(response.getData().getDeletehash());
+        assertNotNull(response.getData().getLink());
+        assertThat(response.getSuccess(), is(true));
+        assertThat(response.getStatus(), equalTo(200));
 
-        String imageId = response.getString("data.id");
-        assertNotNull(imageId);
-        String imageDeleteHash = response.getString("data.deletehash");
-        assertNotNull(imageDeleteHash);
-        String imageLink = response.getString("data.link");
-        assertNotNull(imageLink);
-
-        uploadedImageId = imageId;
-        uploadedImageDeleteHash = imageDeleteHash;
+        uploadedImageId = response.getData().getId();
+        uploadedImageDeleteHash = response.getData().getDeletehash();
     }
 
     @Order(2)
     @Test
     public void getImageByIdTest() {
-        given()
+        GetImageByIdResponseDto response = given()
                 .spec(requestSpecificationWithAuth)
                 .when()
                 .get("/image/" + uploadedImageId)
                 .then()
                 .body("data.id", is(uploadedImageId))
-                .spec(positiveResponseSpecification);
+                .spec(positiveResponseSpecification)
+                .extract()
+                .as(GetImageByIdResponseDto.class);
+
+        assertThat(response.getData().getId(), equalTo(uploadedImageId));
+        assertNotNull(response.getData().getLink());
+        assertThat(response.getSuccess(), is(true));
+        assertThat(response.getStatus(), equalTo(200));
+
     }
 
     @Order(3)

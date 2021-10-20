@@ -50,7 +50,7 @@ public abstract class BaseTests {
                 .expectBody("data", is(notNullValue()))
                 .expectContentType(ContentType.JSON)
                 .expectStatusCode(200)
-                .expectResponseTime(lessThanOrEqualTo(5000L))
+                .expectResponseTime(lessThanOrEqualTo(10000L))
                 .build();
 
         negativeResponseSpecification = new ResponseSpecBuilder()
